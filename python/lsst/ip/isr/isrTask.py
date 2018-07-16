@@ -237,6 +237,14 @@ class IsrTaskConfig(pexConfig.Config):
         default=False,
         doc="Apply the brighter fatter correction"
     )
+    brighterFatterLevel = pexConfig.ChoiceField(
+        doc="The level at which to correct for brighter-fatter",
+        dtype=str, default="CCD",
+        allowed={
+            "AMP": "Every amplifier treated separately",
+            "CCD": "One kernel per CCD",
+        }
+    )
     brighterFatterKernelFile = pexConfig.Field(
         dtype=str,
         default='',
@@ -417,7 +425,7 @@ class IsrTask(pipeBase.CmdLineTask):
             if self.config.doDark else None
         flatExposure = self.getIsrExposure(dataRef, self.config.flatDataProductName) \
             if self.config.doFlat else None
-        brighterFatterKernel = dataRef.get("brighterFatterKernel") if self.config.doBrighterFatter else None
+        brighterFatterKernel = dataRef.get("bfKernelNew") if self.config.doBrighterFatter else None
         defectList = dataRef.get("defects") if self.config.doDefect else None
 
         if self.config.doCrosstalk:
@@ -574,6 +582,10 @@ class IsrTask(pipeBase.CmdLineTask):
                 self.maskAndInterpNan(ccdExposure)
                 interpolationDone = True
 
+            if self.config.brighterFatterLevel == 'CCD':
+                bfKernel = bfKernel[ccdExposure.getDetector().getId()]
+            else:
+                raise NotImplementedError("per-amplifier brighter-fatter correction not yet implemented")
             self.brighterFatterCorrection(ccdExposure, bfKernel,
                                           self.config.brighterFatterMaxIter,
                                           self.config.brighterFatterThreshold,
