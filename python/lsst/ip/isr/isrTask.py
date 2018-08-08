@@ -1198,3 +1198,50 @@ class FakeAmp(object):
 
     def getSuspectLevel(self):
         return float("NaN")
+
+
+class IsrWrapperTaskConfig(pexConfig.Config):
+    isr = pexConfig.ConfigurableField(target=IsrTask, doc="Instrument signature removal")
+
+## @addtogroup LSST_task_documentation
+## @{
+## @page IsrWrapperTask
+## @ref IsrWrapperTask_ "IsrWrapperTask"
+## @copybrief IsrWrapperTask
+## @}
+
+
+class IsrWrapperTask(pipeBase.CmdLineTask):
+    """!
+    @anchor IsrWrapperTask_
+
+    @brief Task to wrap the main IsrTask to allow camera specific retargeting.
+    """
+    ConfigClass = IsrWrapperTaskConfig
+    _DefaultName = "isrWrap"
+
+    def __init__(self, *args, **kwargs):
+        """!Constructor for IsrWrapperTask
+        @param[in] *args    a list of positional arguments passed on to the Task
+                            constructor
+        @param[in] *kwargs  a dictionary of keyword arguments passwed on to the
+                            Task constructor
+        Call the lsst.pipe.base.task.Task.__init__ method,
+        then setup the default IsrTask as a subtask
+        """
+        pipeBase.Task.__init__(self, *args, **kwargs)
+        self.makeSubtask("isr")
+
+    def runDataRef(self, dataRef):
+        """!Perform instrument signature removal on a ButlerDataRef of a Sensor
+        Parameters
+        ----------
+        dataRef : `daf.persistence.butlerSubset.ButlerDataRef`
+            DataRef of the detector data to be processed
+
+        Returns
+        -------
+        result :
+            Returns the result of runDataRef method for the IsrTask.
+        """
+        return self.isr.runDataRef(dataRef)
