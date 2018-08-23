@@ -425,7 +425,7 @@ class IsrTask(pipeBase.CmdLineTask):
             if self.config.doDark else None
         flatExposure = self.getIsrExposure(dataRef, self.config.flatDataProductName) \
             if self.config.doFlat else None
-        brighterFatterKernel = dataRef.get("bfKernelNew") if self.config.doBrighterFatter else None
+        brighterFatterKernel = dataRef.get("brighterFatterKernelNew") if self.config.doBrighterFatter else None
         defectList = dataRef.get("defects") if self.config.doDefect else None
 
         if self.config.doCrosstalk:
